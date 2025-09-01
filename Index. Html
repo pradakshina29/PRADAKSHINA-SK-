@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Online Voting System</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f6f7fb; }
+    h2 { color: #333; }
+    .card { background: #fff; padding: 20px; border-radius: 10px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+    label { display: block; margin-top: 10px; }
+    input, select, button { width: 100%; padding: 10px; margin-top: 6px; }
+    button { background: #4a63e7; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #324bcc; }
+    .hidden { display: none; }
+    .success { color: green; font-weight: bold; }
+    .error { color: red; font-weight: bold; }
+    .result-bar { background: #e6e6e6; border-radius: 6px; margin: 6px 0; position: relative; height: 24px; }
+    .result-bar span { background: #4a63e7; height: 100%; display: block; border-radius: 6px; color: #fff;
+                       text-align: center; font-size: 12px; line-height: 24px; }
+  </style>
+</head>
+<body>
+
+  <div class="card" id="login-section">
+    <h2>Login</h2>
+    <label>Username</label>
+    <input type="text" id="username" placeholder="e.g., user1">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="e.g., pass1">
+    <button onclick="login()">Login</button>
+    <p id="login-msg"></p>
+    <p><b>Demo users:</b> user1/pass1, user2/pass2, user3/pass3</p>
+  </div>
+
+  <div class="card hidden" id="voting-section">
+    <h2>Cast Your Vote</h2>
+    <p id="welcome"></p>
+    <label for="candidate">Choose Candidate:</label>
+    <select id="candidate">
+      <option value="Alice">Alice</option>
+      <option value="Bob">Bob</option>
+      <option value="Charlie">Charlie</option>
+    </select>
+    <button onclick="castVote()">Submit Vote</button>
+    <p id="vote-msg"></p>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <div class="card" id="admin-section">
+    <h2>Admin Panel</h2>
+    <label>Admin Password</label>
+    <input type="password" id="admin-pass" placeholder="admin123">
+    <button onclick="showResults()">Show Results</button>
+    <div id="results"></div>
+  </div>
+
+  <script>
+    const users = {
+      "user1": { password: "pass1", voted: false },
+      "user2": { password: "pass2", voted: false },
+      "user3": { password: "pass3", voted: false }
+    };
+
+    const votes = { "Alice": 0, "Bob": 0, "Charlie": 0 };
+    let currentUser = null;
+
+    function login() {
+      const uname = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+      const msg = document.getElementById("login-msg");
+
+      if (users[uname] && users[uname].password === pass) {
+        if (users[uname].voted) {
+          msg.textContent = "❌ You have already voted!";
+          msg.className = "error";
+        } else {
+          currentUser = uname;
+          document.getElementById("login-section").classList.add("hidden");
+          document.getElementById("voting-section").classList.remove("hidden");
+          document.getElementById("welcome").textContent = "Welcome, " + uname;
+        }
+      } else {
+        msg.textContent = "❌ Invalid login details!";
+        msg.className = "error";
+      }
+    }
+
+    function castVote() {
+      const choice = document.getElementById("candidate").value;
+      const msg = document.getElementById("vote-msg");
+
+      if (currentUser && !users[currentUser].voted) {
+        votes[choice]++;
+        users[currentUser].voted = true;
+        msg.textContent = "🎉 Thank you, your vote for " + choice + " has been recorded.";
+        msg.className = "success";
+      } else {
+        msg.textContent = "❌ You cannot vote again.";
+        msg.className = "error";
+      }
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById("voting-section").classList.add("hidden");
+      document.getElementById("login-section").classList.remove("hidden");
+      document.getElementById("vote-msg").textContent = "";
+      document.getElementById("login-msg").textContent = "";
+    }
+
+    function showResults() {
+      const pass = document.getElementById("admin-pass").value;
+      const resultsDiv = document.getElementById("results");
+
+      if (pass === "admin123") {
+        resultsDiv.innerHTML = "<h3>Voting Results:</h3>";
+        let total = votes["Alice"] + votes["Bob"] + votes["Charlie"];
+        for (let candidate in votes) {
+          let percent = total > 0 ? Math.round((votes[candidate]/total)*100) : 0;
+          resultsDiv.innerHTML += `
+            <p>${candidate}: ${votes[candidate]} votes (${percent}%)</p>
+            <div class="result-bar"><span style="width:${percent}%">${percent}%</span></div>
+          `;
+        }
+      } else {
+        resultsDiv.innerHTML = "<p class='error'>❌ Wrong admin password!</p>";
+      }
+    }
+  </script>
+</body>
+</html>
